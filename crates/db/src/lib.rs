@@ -7,11 +7,6 @@
 use sqlx::postgres::{PgPoolOptions, PgPool};
 use std::time::Duration;
 
-pub mod files;
-pub mod formats;
-pub mod jobs;
-pub mod mappings;
-pub mod merge_runs;
 pub mod types;
 pub mod users;
 

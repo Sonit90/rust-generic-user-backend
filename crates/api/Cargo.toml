@@ -15,8 +15,6 @@ path = "src/main.rs"
 price-merger-core = { path = "../core" }
 price-merger-db   = { path = "../db" }
 price-merger-auth = { path = "../auth" }
-price-merger-file-processor = { path = "../file-processor" }
-price-merger-jobs = { path = "../jobs" }
 
 # Web
 axum = { workspace = true }

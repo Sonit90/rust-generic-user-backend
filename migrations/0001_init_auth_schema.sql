@@ -1,4 +1,4 @@
--- Users, roles, permissions, OAuth identities, refresh tokens.
+-- Generic RBAC auth schema with users, roles, permissions, OAuth, email verification, password reset.
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS citext;
@@ -12,7 +12,7 @@ CREATE TABLE roles (
 
 INSERT INTO roles (name, description) VALUES
     ('admin',     'Full access; can manage users and permissions'),
-    ('moderator', 'Can manage shared resources but not users'),
+    ('moderator', 'Can manage shared resources'),
     ('user',      'Regular user');
 
 -- Permissions ----------------------------------------------------------
@@ -25,17 +25,7 @@ CREATE TABLE permissions (
 INSERT INTO permissions (name, description) VALUES
     ('users.read',          'View user list'),
     ('users.manage',        'Create/edit/disable users'),
-    ('users.assign_roles',  'Assign roles to users'),
-    ('files.upload',        'Upload price-list files'),
-    ('files.read_own',      'Read own uploaded files'),
-    ('files.read_all',      'Read any user''s files'),
-    ('files.delete_own',    'Delete own files'),
-    ('files.delete_any',    'Delete any file'),
-    ('formats.manage_own',  'Create/edit own output formats'),
-    ('formats.manage_any',  'Create/edit any output format'),
-    ('mappings.manage_own', 'Create/edit own column mappings'),
-    ('mappings.manage_any', 'Create/edit any column mapping'),
-    ('jobs.run',            'Trigger merge/transform jobs');
+    ('users.assign_roles',  'Assign roles to users');
 
 CREATE TABLE role_permissions (
     role_id       SMALLINT NOT NULL REFERENCES roles(id)       ON DELETE CASCADE,
@@ -51,23 +41,7 @@ WHERE r.name = 'admin';
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r, permissions p
 WHERE r.name = 'moderator'
-  AND p.name IN (
-    'users.read',
-    'files.upload', 'files.read_own', 'files.read_all',
-    'files.delete_own', 'files.delete_any',
-    'formats.manage_own', 'formats.manage_any',
-    'mappings.manage_own', 'mappings.manage_any',
-    'jobs.run'
-  );
-
-INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM roles r, permissions p
-WHERE r.name = 'user'
-  AND p.name IN (
-    'files.upload', 'files.read_own', 'files.delete_own',
-    'formats.manage_own', 'mappings.manage_own',
-    'jobs.run'
-  );
+  AND p.name IN ('users.read');
 
 -- Users ----------------------------------------------------------------
 CREATE TABLE users (
@@ -112,6 +86,30 @@ CREATE TABLE refresh_tokens (
 
 CREATE INDEX refresh_tokens_user_idx ON refresh_tokens(user_id);
 CREATE INDEX refresh_tokens_expires_idx ON refresh_tokens(expires_at);
+
+-- Email verification tokens
+CREATE TABLE email_verification_tokens (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash  TEXT NOT NULL UNIQUE,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    used_at     TIMESTAMPTZ,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX email_verification_tokens_user_idx ON email_verification_tokens(user_id);
+
+-- Password reset tokens
+CREATE TABLE password_reset_tokens (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash  TEXT NOT NULL UNIQUE,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    used_at     TIMESTAMPTZ,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX password_reset_tokens_user_idx ON password_reset_tokens(user_id);
 
 -- Per-user permission overrides (optional, in addition to role) --------
 CREATE TABLE user_permissions (

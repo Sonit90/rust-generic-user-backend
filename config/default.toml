@@ -1,34 +1,19 @@
-# Base configuration. Other environments override values per file.
-# Any value can be overridden by an env var of the form APP__SECTION__KEY
+# Base configuration for generic auth service.
+# Values can be overridden by env vars of the form APP__SECTION__KEY
 # (double underscores delimit nesting). Example: APP__HTTP__BIND.
 
 [http]
 bind = "0.0.0.0:8080"
 public_url = "http://localhost:8080"
 request_timeout_secs = 30
-max_body_bytes = 67_108_864 # 64 MiB
 
 [db]
 # Prefer DATABASE_URL env var; this is a fallback for local runs.
-url = "postgres://price_merger:price_merger@localhost:5432/price_merger"
+url = "postgres://auth_user:auth_password@localhost:5432/auth_db"
 max_connections = 20
 min_connections = 2
 acquire_timeout_secs = 10
 run_migrations_on_start = true
-
-[storage]
-# RustFS / MinIO / any S3-compatible
-endpoint = "http://localhost:9000"
-region = "us-east-1"
-bucket = "price-merger"
-access_key = "price_merger"
-secret_key = "price_merger_secret"
-use_path_style = true
-
-[files]
-ttl_hours = 72
-max_upload_mb = 50
-allowed_extensions = ["csv", "xls", "xlsx"]
 
 [auth]
 jwt_secret = "change-me-in-production"
@@ -40,12 +25,6 @@ password_min_length = 8
 client_id = ""
 client_secret = ""
 redirect_url = "http://localhost:8080/api/v1/auth/oauth/google/callback"
-
-[jobs]
-workers = 4
-poll_interval_secs = 5
-visibility_timeout_secs = 300
-max_attempts = 5
 
 [cors]
 # Empty list = no CORS headers added. Use ["*"] only in dev.
@@ -62,4 +41,4 @@ smtp_port = 587
 smtp_username = ""
 smtp_password = ""
 from_email = "noreply@example.com"
-from_name = "PriceMerger"
+from_name = "Auth Service"

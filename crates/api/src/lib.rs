@@ -37,28 +37,11 @@ pub async fn run(settings: Arc<config::Settings>) -> anyhow::Result<()> {
         .with_context(|| format!("bind {}", settings.http.bind))?;
     tracing::info!(addr = %settings.http.bind, "listening");
 
-    // Spawn the worker pool.
-    let (tx, rx) = tokio::sync::watch::channel(false);
-    let worker = price_merger_jobs::Worker::new(
-        state.db.clone(),
-        state.storage.clone(),
-        price_merger_jobs::WorkerConfig {
-            workers: settings.jobs.workers,
-            poll_interval_secs: settings.jobs.poll_interval_secs,
-            visibility_timeout_secs: settings.jobs.visibility_timeout_secs as i64,
-            batch_size: 4,
-            purge_sweep_interval_secs: 600,
-        },
-    );
-    let worker_handle = tokio::spawn(worker.run(rx));
-
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await
         .context("axum::serve")?;
 
-    let _ = tx.send(true); // signal workers to drain
-    let _ = worker_handle.await;
     Ok(())
 }
 

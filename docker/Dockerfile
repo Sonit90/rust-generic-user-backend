@@ -11,12 +11,13 @@ COPY crates ./crates
 COPY migrations ./migrations
 COPY config ./config
 
-# Make sure SQLx offline mode is honored if .sqlx is present.
-ENV SQLX_OFFLINE=true
+# Build with offline mode if .sqlx exists, otherwise connect to DB at build time.
+# For offline builds: run `cargo sqlx prepare --workspace` to generate .sqlx/
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/target \
-    cargo build --release --locked --bin price-merger-api && \
-    cp /build/target/release/price-merger-api /usr/local/bin/price-merger-api
+    if [ -d .sqlx ]; then export SQLX_OFFLINE=true; fi && \
+    cargo build --release --locked --bin generic-auth-api && \
+    cp /build/target/release/generic-auth-api /usr/local/bin/generic-auth-api
 
 # ---------- runtime ----------
 FROM debian:bookworm-slim AS runtime
@@ -26,14 +27,14 @@ RUN apt-get update && \
     groupadd --system app && useradd --system --gid app --create-home app
 
 WORKDIR /app
-COPY --from=builder /usr/local/bin/price-merger-api /usr/local/bin/price-merger-api
+COPY --from=builder /usr/local/bin/generic-auth-api /usr/local/bin/generic-auth-api
 COPY config ./config
 COPY migrations ./migrations
 
 USER app
 EXPOSE 8080
 ENV APP_ENV=production \
-    RUST_LOG=info,price_merger=info,sqlx=warn
+    RUST_LOG=info,generic_auth=info,sqlx=warn
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["/usr/local/bin/price-merger-api"]
+CMD ["/usr/local/bin/generic-auth-api"]

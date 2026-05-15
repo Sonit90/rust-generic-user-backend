@@ -488,7 +488,7 @@ pub(crate) async fn forgot_password(
     if let Ok(Some(token)) = request_password_reset(&state, &body.email, 1).await {
         let url = format!(
             "{}/reset-password?token={}",
-            state.settings.http.frontend_url, token
+            state.settings.http.public_url, token
         );
         let email = body.email.clone();
         tokio::spawn(async move {
@@ -537,7 +537,7 @@ async fn spawn_verification_email(state: AppState, user_id: Uuid, email: String)
 
     let url = format!(
         "{}/verify-email?token={}",
-        state.settings.http.frontend_url, token
+        state.settings.http.public_url, token
     );
 
     tokio::spawn(async move {

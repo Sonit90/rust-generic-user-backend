@@ -9,7 +9,7 @@ use price_merger_api::{
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 #[derive(Parser)]
-#[command(name = "price-merger-api", about = "Price Merger API server")]
+#[command(name = "generic-auth-api", about = "Generic RBAC auth API server")]
 struct Cli {
     #[command(subcommand)]
     command: Option<Command>,
@@ -36,7 +36,7 @@ async fn main() -> anyhow::Result<()> {
 
     match cli.command {
         None => {
-            tracing::info!(env = %settings.app_env, "starting price-merger-api");
+            tracing::info!(env = %settings.app_env, "starting generic-auth-api");
             run(Arc::new(settings)).await
         }
         Some(Command::CreateAdmin { email, password }) => {
@@ -59,7 +59,7 @@ async fn main() -> anyhow::Result<()> {
 
 fn init_tracing() {
     let filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info,price_merger=debug,sqlx=warn"));
+        .unwrap_or_else(|_| EnvFilter::new("info,generic_auth=debug,sqlx=warn"));
     tracing_subscriber::registry()
         .with(filter)
         .with(fmt::layer().with_target(true).compact())
