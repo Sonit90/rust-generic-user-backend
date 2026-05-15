@@ -1,0 +1,28 @@
+[package]
+name = "price-merger-file-processor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[lib]
+name = "price_merger_file_processor"
+path = "src/lib.rs"
+
+[dependencies]
+price-merger-core = { path = "../core" }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+bytes = { workspace = true }
+
+csv = { workspace = true }
+calamine = { workspace = true }
+rust_xlsxwriter = { workspace = true }
+encoding_rs = { workspace = true }
+
+regex = "1"

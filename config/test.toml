@@ -1,0 +1,25 @@
+# Test overrides. Used by `APP_ENV=test` (e.g., integration tests).
+
+[http]
+bind = "127.0.0.1:0"
+
+[db]
+url = "postgres://price_merger:price_merger@localhost:5432/price_merger_test"
+max_connections = 5
+min_connections = 1
+run_migrations_on_start = true
+
+[storage]
+bucket = "price-merger-test"
+
+[files]
+ttl_hours = 1
+
+[auth]
+jwt_secret = "test-only-secret"
+jwt_access_ttl_min = 5
+jwt_refresh_ttl_days = 1
+
+[jobs]
+workers = 1
+poll_interval_secs = 1

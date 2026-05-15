@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT requeue_stale_jobs(make_interval(secs => $1))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "requeue_stale_jobs",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Float8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f3b1e98a33b6e0ebfb5133588f6939ada37460aca459750a8dbafe756ea8eb80"
+}

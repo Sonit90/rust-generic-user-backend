@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id FROM uploaded_files\n         WHERE purged_at IS NULL AND expires_at <= $1\n         ORDER BY expires_at LIMIT $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "96a03697d651574386c2b6057a0394f25c5d97d6478fd33fb477bf197def5f80"
+}

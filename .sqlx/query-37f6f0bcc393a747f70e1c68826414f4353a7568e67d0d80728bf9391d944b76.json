@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE merge_runs SET status = 'failed', finished_at = now(), error_message = $2\n         WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "37f6f0bcc393a747f70e1c68826414f4353a7568e67d0d80728bf9391d944b76"
+}

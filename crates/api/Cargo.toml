@@ -1,0 +1,64 @@
+[package]
+name = "price-merger-api"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[[bin]]
+name = "price-merger-api"
+path = "src/main.rs"
+
+[dependencies]
+price-merger-core = { path = "../core" }
+price-merger-db   = { path = "../db" }
+price-merger-auth = { path = "../auth" }
+price-merger-file-processor = { path = "../file-processor" }
+price-merger-jobs = { path = "../jobs" }
+
+# Web
+axum = { workspace = true }
+axum-extra = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+hyper = { workspace = true }
+
+# Async / runtime
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+futures = { workspace = true }
+
+# Serde / config
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+config = { workspace = true }
+
+# Errors / logging
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# IDs / time
+uuid = { workspace = true }
+time = { workspace = true }
+
+# Misc
+bytes = { workspace = true }
+mime = { workspace = true }
+mime_guess = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+lettre = { workspace = true }
+url = { workspace = true }
+validator = { workspace = true }
+sqlx = { workspace = true }
+reqwest = { workspace = true }
+async-trait = { workspace = true }
+dotenvy = "0.15"
+clap = { workspace = true }
+utoipa = { workspace = true }
+utoipa-swagger-ui = { workspace = true }

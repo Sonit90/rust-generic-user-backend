@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE merge_runs SET status = 'completed', finished_at = now(), output_file_id = $2\n         WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "31b99e470bcbb8f9f70aea2d33c1a20da4eb79f4eea62d5b6dc268d77753f689"
+}
