@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use price_merger_auth::JwtCodec;
-use price_merger_core::{models::User, AppError};
-use price_merger_db::{connect, run_migrations, users as user_db, DbConfig};
+use generic_auth_auth::JwtCodec;
+use generic_auth_core::{models::User, AppError};
+use generic_auth_db::{connect, run_migrations, users as user_db, DbConfig};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -30,7 +30,7 @@ impl AppState {
             run_migrations(&db).await?;
         }
 
-        let jwt = JwtCodec::new(price_merger_auth::JwtConfig {
+        let jwt = JwtCodec::new(generic_auth_auth::JwtConfig {
             secret: settings.auth.jwt_secret.clone(),
             access_ttl_min: settings.auth.jwt_access_ttl_min,
             refresh_ttl_days: settings.auth.jwt_refresh_ttl_days,

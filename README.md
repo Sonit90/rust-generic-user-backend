@@ -52,7 +52,7 @@ $env:DATABASE_URL = "postgres://auth_user:auth_password@localhost:5434/auth_db"
 sqlx migrate run
 
 # 4. Start the API
-cargo run -p price-merger-api
+cargo run -p generic-auth-api
 ```
 
 API listens on `http://localhost:8080`. Health check: `GET /health`.
@@ -179,7 +179,7 @@ No admin users are seeded by migrations. Create one via CLI:
 
 ```powershell
 $env:DATABASE_URL = "postgres://auth_user:auth_password@localhost:5432/auth_db"
-cargo run -p price-merger-api -- create-admin --email=you@example.com --password=yourpassword
+cargo run -p generic-auth-api -- create-admin --email=you@example.com --password=yourpassword
 ```
 
 Or with compiled binary:
@@ -193,7 +193,7 @@ Then login at `POST /api/v1/auth/login` with those credentials.
 
 ```powershell
 # Unit tests (no DB needed)
-cargo test -p price-merger-api routes::auth
+cargo test -p generic-auth-api routes::auth
 
 # All tests
 cargo test --workspace
@@ -225,13 +225,13 @@ To embed this in your application:
 
 1. **Add auth as a dependency**:
    ```toml
-   price-merger-auth = { path = "path/to/crates/auth" }
-   price-merger-db = { path = "path/to/crates/db" }
+   generic-auth-auth = { path = "path/to/crates/auth" }
+   generic-auth-db = { path = "path/to/crates/db" }
    ```
 
 2. **Initialize auth state** (see `crates/api/src/state.rs`):
    ```rust
-   let db = price_merger_db::connect(&db_config).await?;
+   let db = generic_auth_db::connect(&db_config).await?;
    let jwt = JwtCodec::new(jwt_config);
    ```
 

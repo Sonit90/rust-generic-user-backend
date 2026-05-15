@@ -1,5 +1,5 @@
 [package]
-name = "price-merger-db"
+name = "generic-auth-db"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,11 +8,11 @@ authors.workspace = true
 publish = false
 
 [lib]
-name = "price_merger_db"
+name = "generic_auth_db"
 path = "src/lib.rs"
 
 [dependencies]
-price-merger-core = { path = "../core" }
+generic-auth-core = { path = "../core" }
 
 sqlx = { workspace = true }
 serde = { workspace = true }

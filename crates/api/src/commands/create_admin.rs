@@ -1,5 +1,5 @@
-use price_merger_auth::hash_password;
-use price_merger_core::{models::User, AppError};
+use generic_auth_auth::hash_password;
+use generic_auth_core::{models::User, AppError};
 use validator::Validate;
 
 #[derive(Debug, Validate)]
@@ -31,11 +31,11 @@ pub async fn create_admin_user(
 #[async_trait::async_trait]
 impl CreateAdminPort for sqlx::PgPool {
     async fn create_user(&self, email: &str, password_hash: &str) -> Result<User, AppError> {
-        price_merger_db::users::create_user(self, price_merger_db::users::NewUser {
+        generic_auth_db::users::create_user(self, generic_auth_db::users::NewUser {
             email: Some(email),
             password_hash: Some(password_hash),
             display_name: None,
-            role: price_merger_core::models::Role::Admin,
+            role: generic_auth_core::models::Role::Admin,
             email_verified: true,
         }).await.map_err(Into::into)
     }
@@ -48,7 +48,7 @@ impl CreateAdminPort for sqlx::PgPool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use price_merger_core::models::Role;
+    use generic_auth_core::models::Role;
     use std::sync::Mutex;
     use time::OffsetDateTime;
     use uuid::Uuid;

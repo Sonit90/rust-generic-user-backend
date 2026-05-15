@@ -885,6 +885,101 @@ dependencies = [
 ]
 
 [[package]]
+name = "generic-auth-api"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum",
+ "axum-extra",
+ "bytes",
+ "clap",
+ "config",
+ "dotenvy",
+ "futures",
+ "generic-auth-auth",
+ "generic-auth-core",
+ "generic-auth-db",
+ "hex",
+ "hyper 1.9.0",
+ "lettre",
+ "mime",
+ "mime_guess",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sqlx",
+ "thiserror 1.0.69",
+ "time",
+ "tokio",
+ "tokio-util",
+ "toml",
+ "tower",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "utoipa",
+ "utoipa-swagger-ui",
+ "uuid",
+ "validator",
+]
+
+[[package]]
+name = "generic-auth-auth"
+version = "0.1.0"
+dependencies = [
+ "argon2",
+ "async-trait",
+ "generic-auth-core",
+ "generic-auth-db",
+ "hex",
+ "jsonwebtoken",
+ "oauth2",
+ "rand 0.8.6",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sqlx",
+ "thiserror 1.0.69",
+ "time",
+ "tokio",
+ "tracing",
+ "url",
+ "uuid",
+]
+
+[[package]]
+name = "generic-auth-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "time",
+ "utoipa",
+ "uuid",
+ "validator",
+]
+
+[[package]]
+name = "generic-auth-db"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "generic-auth-core",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 1.0.69",
+ "time",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1957,101 +2052,6 @@ checksum = "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b"
 dependencies = [
  "proc-macro2",
  "syn 2.0.117",
-]
-
-[[package]]
-name = "price-merger-api"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "axum",
- "axum-extra",
- "bytes",
- "clap",
- "config",
- "dotenvy",
- "futures",
- "hex",
- "hyper 1.9.0",
- "lettre",
- "mime",
- "mime_guess",
- "price-merger-auth",
- "price-merger-core",
- "price-merger-db",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "sha2",
- "sqlx",
- "thiserror 1.0.69",
- "time",
- "tokio",
- "tokio-util",
- "toml",
- "tower",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "url",
- "utoipa",
- "utoipa-swagger-ui",
- "uuid",
- "validator",
-]
-
-[[package]]
-name = "price-merger-auth"
-version = "0.1.0"
-dependencies = [
- "argon2",
- "async-trait",
- "hex",
- "jsonwebtoken",
- "oauth2",
- "price-merger-core",
- "price-merger-db",
- "rand 0.8.6",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "sha2",
- "sqlx",
- "thiserror 1.0.69",
- "time",
- "tokio",
- "tracing",
- "url",
- "uuid",
-]
-
-[[package]]
-name = "price-merger-core"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "time",
- "utoipa",
- "uuid",
- "validator",
-]
-
-[[package]]
-name = "price-merger-db"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "price-merger-core",
- "serde",
- "serde_json",
- "sqlx",
- "thiserror 1.0.69",
- "time",
- "tracing",
- "uuid",
 ]
 
 [[package]]

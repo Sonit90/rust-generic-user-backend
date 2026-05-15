@@ -1,5 +1,5 @@
 [package]
-name = "price-merger-auth"
+name = "generic-auth-auth"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,12 +8,12 @@ authors.workspace = true
 publish = false
 
 [lib]
-name = "price_merger_auth"
+name = "generic_auth_auth"
 path = "src/lib.rs"
 
 [dependencies]
-price-merger-core = { path = "../core" }
-price-merger-db   = { path = "../db" }
+generic-auth-core = { path = "../core" }
+generic-auth-db   = { path = "../db" }
 
 tokio = { workspace = true }
 serde = { workspace = true }

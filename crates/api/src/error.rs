@@ -1,7 +1,7 @@
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
-use price_merger_core::AppError;
+use generic_auth_core::AppError;
 use serde_json::json;
 
 pub struct ApiError(pub AppError);

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
-use price_merger_api::{
+use generic_auth_api::{
     commands::create_admin::{create_admin_user, CreateAdminArgs},
     config::Settings,
     run,
@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
             run(Arc::new(settings)).await
         }
         Some(Command::CreateAdmin { email, password }) => {
-            let db = price_merger_db::connect(&price_merger_db::DbConfig {
+            let db = generic_auth_db::connect(&generic_auth_db::DbConfig {
                 url: settings.db.url.clone(),
                 max_connections: 2,
                 min_connections: 1,

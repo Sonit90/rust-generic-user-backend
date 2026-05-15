@@ -6,9 +6,9 @@ use axum::{
     routing::{get, post, patch},
     Json, Router,
 };
-use price_merger_auth::permissions::{load_permissions, require, Permission};
-use price_merger_core::models::{Role, User};
-use price_merger_db::users as user_db;
+use generic_auth_auth::permissions::{load_permissions, require, Permission};
+use generic_auth_core::models::{Role, User};
+use generic_auth_db::users as user_db;
 use serde::Deserialize;
 use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
@@ -153,6 +153,6 @@ pub(crate) async fn grant_permission(
         "#,
         id, body.permission, body.granted,
     ).execute(&state.db).await
-        .map_err(|e| ApiError(price_merger_core::AppError::Database(e.to_string())))?;
+        .map_err(|e| ApiError(generic_auth_core::AppError::Database(e.to_string())))?;
     Ok(axum::http::StatusCode::NO_CONTENT)
 }

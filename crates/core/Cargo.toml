@@ -1,5 +1,5 @@
 [package]
-name = "price-merger-core"
+name = "generic-auth-core"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,7 +8,7 @@ authors.workspace = true
 publish = false
 
 [lib]
-name = "price_merger_core"
+name = "generic_auth_core"
 path = "src/lib.rs"
 
 [dependencies]

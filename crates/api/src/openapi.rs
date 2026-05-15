@@ -36,8 +36,8 @@ use crate::routes::{admin, auth, users};
         admin::SetRoleReq,
         admin::SetActiveReq,
         admin::GrantPermReq,
-        price_merger_core::models::User,
-        price_merger_core::models::Role,
+        generic_auth_core::models::User,
+        generic_auth_core::models::Role,
     )),
     modifiers(&BearerAuth),
     info(

@@ -4,7 +4,7 @@ use oauth2::{
     basic::BasicClient, AuthUrl, AuthorizationCode, ClientId, ClientSecret,
     CsrfToken, RedirectUrl, Scope, TokenResponse, TokenUrl,
 };
-use price_merger_core::AppError;
+use generic_auth_core::AppError;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]

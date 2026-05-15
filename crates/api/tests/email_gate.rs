@@ -13,9 +13,9 @@ use axum::{
     routing::get,
     Router,
 };
-use price_merger_api::middleware::auth::{AuthUser, FindUserById, HasJwt, VerifiedUser};
-use price_merger_auth::{JwtCodec, JwtConfig};
-use price_merger_core::{models::{Role, User}, AppError};
+use generic_auth_api::middleware::auth::{AuthUser, FindUserById, HasJwt, VerifiedUser};
+use generic_auth_auth::{JwtCodec, JwtConfig};
+use generic_auth_core::{models::{Role, User}, AppError};
 use time::OffsetDateTime;
 use tower::ServiceExt as _;
 use uuid::Uuid;

@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
-use price_merger_core::AppError;
-use price_merger_db::users as user_db;
+use generic_auth_core::AppError;
+use generic_auth_db::users as user_db;
 use sqlx::PgPool;
 use uuid::Uuid;
 
