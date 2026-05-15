@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# Multi-stage build for the price-merger api binary.
+# Multi-stage build for the generic auth api binary.
 
 # ---------- builder ----------
 FROM rust:1.95-bookworm AS builder
