@@ -96,6 +96,7 @@ POSTGRES_PORT=5432
 POSTGRES_HOST_PORT=5434
 
 APP__AUTH__JWT_SECRET=<paste 64-byte hex from step 2>
+APP__AUTH__JWT_ISSUER=<your-service-name>
 
 # Optional integrations
 APP__AUTH__GOOGLE__CLIENT_ID=
@@ -417,6 +418,7 @@ See `.env.example` for all variables.
 
 **[auth]**
 - `jwt_secret`: Secret for signing JWT tokens. **Required.** Set via `APP__AUTH__JWT_SECRET` env (no toml fallback).
+- `jwt_issuer`: Value of the `iss` claim used during issuance + verification. **Required.** Set via `APP__AUTH__JWT_ISSUER` env (no toml fallback).
 - `jwt_access_ttl_min`: Access token lifetime (default 30 min)
 - `jwt_refresh_ttl_days`: Refresh token lifetime (default 14 days)
 - `password_min_length`: Minimum password length (default 8)

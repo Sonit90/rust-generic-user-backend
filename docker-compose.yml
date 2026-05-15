@@ -32,6 +32,7 @@ services:
       RUST_LOG: ${RUST_LOG}
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB}
       APP__AUTH__JWT_SECRET: ${APP__AUTH__JWT_SECRET}
+      APP__AUTH__JWT_ISSUER: ${APP__AUTH__JWT_ISSUER}
       APP__DB__RUN_MIGRATIONS_ON_START: "true"
     ports:
       - "8080:8080"

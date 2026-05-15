@@ -33,6 +33,7 @@ fn default_acquire() -> u64 { 10 }
 #[derive(Debug, Clone, Deserialize)]
 pub struct Auth {
     pub jwt_secret: String,
+    pub jwt_issuer: String,
     pub jwt_access_ttl_min: i64,
     pub jwt_refresh_ttl_days: i64,
     pub password_min_length: usize,

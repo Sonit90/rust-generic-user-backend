@@ -34,7 +34,7 @@ impl AppState {
             secret: settings.auth.jwt_secret.clone(),
             access_ttl_min: settings.auth.jwt_access_ttl_min,
             refresh_ttl_days: settings.auth.jwt_refresh_ttl_days,
-            issuer: "generic-auth".into(),
+            issuer: settings.auth.jwt_issuer.clone(),
         });
 
         Ok(Self {
