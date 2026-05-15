@@ -38,17 +38,14 @@ Zero external services needed except PostgreSQL.
 ### Setup (Local Dev)
 
 ```powershell
-# 1. Clone and copy env
+# 1. Clone and copy env (edit POSTGRES_*, DATABASE_URL, APP__AUTH__JWT_SECRET as needed)
 cp .env.example .env
-# Edit .env if needed (defaults assume localhost postgres)
 
-# 2. Start Postgres (if using Docker)
-cd docker
+# 2. Start Postgres (compose reads .env from repo root)
 docker compose up -d postgres
-cd ..
 
-# 3. Run migrations
-$env:DATABASE_URL = "postgres://auth_user:auth_password@localhost:5434/auth_db"
+# 3. Run migrations (DATABASE_URL points at host port from .env)
+$env:DATABASE_URL = (Get-Content .env | Select-String "^DATABASE_URL=").ToString().Split("=",2)[1]
 sqlx migrate run
 
 # 4. Start the API
@@ -59,12 +56,149 @@ API listens on `http://localhost:8080`. Health check: `GET /health`.
 
 ### Setup (Docker)
 
+Run from repo root (compose auto-reads `.env` adjacent to `docker-compose.yml`):
+
 ```powershell
-cd docker
 docker compose up -d
 ```
 
-This runs postgres + API in containers. Postgres: 5432, API: 8080.
+Postgres: `${POSTGRES_HOST_PORT}` on host → `${POSTGRES_PORT}` in container. API: 8080.
+
+## Production Deployment (Docker)
+
+Docker Compose is the supported deployment path. App auto-runs migrations on container start (compose sets `APP__DB__RUN_MIGRATIONS_ON_START=true`).
+
+### 1. Prerequisites
+
+- Docker Engine 24+ with Compose v2 plugin
+- Outbound network access for `cargo` + Docker Hub during initial build
+- Committed `.sqlx/` offline query cache (run `cargo sqlx prepare --workspace` locally against a dev DB and commit before first deploy)
+
+### 2. Generate secrets
+
+```bash
+# JWT signing secret (64-byte hex)
+openssl rand -hex 64
+
+# Postgres password
+openssl rand -hex 32
+```
+
+Never commit these. Never reuse the defaults in `docker-compose.yml`.
+
+### 3. Create production `.env` at repo root
+
+```env
+POSTGRES_USER=auth_user
+POSTGRES_PASSWORD=<paste 32-byte hex from step 2>
+POSTGRES_DB=auth_db
+POSTGRES_PORT=5432
+POSTGRES_HOST_PORT=5434
+
+APP__AUTH__JWT_SECRET=<paste 64-byte hex from step 2>
+
+# Optional integrations
+APP__AUTH__GOOGLE__CLIENT_ID=
+APP__AUTH__GOOGLE__CLIENT_SECRET=
+APP__AUTH__GOOGLE__REDIRECT_URL=
+APP__EMAIL__SMTP_HOST=
+APP__EMAIL__SMTP_PORT=587
+APP__EMAIL__SMTP_USERNAME=
+APP__EMAIL__SMTP_PASSWORD=
+```
+
+`.env` is git-ignored. Store securely (Vault, AWS Secrets Manager, etc.).
+
+### 4. Override compose for production
+
+Create `docker-compose.prod.yml` at repo root (hides Postgres from host + passes optional env):
+
+```yaml
+services:
+  postgres:
+    ports: !reset []
+  api:
+    environment:
+      RUST_LOG: info,generic_auth=info,sqlx=warn
+      APP__AUTH__GOOGLE__CLIENT_ID: ${APP__AUTH__GOOGLE__CLIENT_ID}
+      APP__AUTH__GOOGLE__CLIENT_SECRET: ${APP__AUTH__GOOGLE__CLIENT_SECRET}
+      APP__AUTH__GOOGLE__REDIRECT_URL: ${APP__AUTH__GOOGLE__REDIRECT_URL}
+      APP__EMAIL__SMTP_HOST: ${APP__EMAIL__SMTP_HOST}
+      APP__EMAIL__SMTP_PORT: ${APP__EMAIL__SMTP_PORT}
+      APP__EMAIL__SMTP_USERNAME: ${APP__EMAIL__SMTP_USERNAME}
+      APP__EMAIL__SMTP_PASSWORD: ${APP__EMAIL__SMTP_PASSWORD}
+```
+
+### 5. Build + start (from repo root)
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+API starts → connects to Postgres → applies migrations → listens on `:8080`.
+
+### 6. Create first admin user
+
+```bash
+docker compose exec api /usr/local/bin/generic-auth-api \
+  create-admin --email=admin@example.com --password='<strong-password>'
+```
+
+### 7. Verify
+
+```bash
+curl -fsS http://<host>:8080/health
+docker compose ps
+docker compose logs -f api
+```
+
+### 8. Reverse proxy + TLS
+
+Run nginx / Caddy / Traefik in front of port `8080`. Terminate TLS there. Do not expose `8080` to the public internet directly.
+
+Caddy example:
+
+```caddyfile
+auth.example.com {
+    reverse_proxy localhost:8080
+}
+```
+
+### 9. Updates
+
+```bash
+git pull
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+Old container stops, new one starts, migrations apply automatically. Downtime: ~2-5s.
+
+### 10. Backups
+
+Postgres data lives in the `generic-auth_postgres_data` named volume. Snapshot via:
+
+```bash
+docker compose exec postgres pg_dump -U auth_user auth_db > backup-$(date +%F).sql
+```
+
+Restore:
+
+```bash
+cat backup-2026-05-15.sql | docker compose exec -T postgres psql -U auth_user auth_db
+```
+
+### Production hardening checklist
+
+- [ ] Strong `APP__AUTH__JWT_SECRET` (≥64 bytes random); rotate on suspected compromise
+- [ ] Strong `POSTGRES_PASSWORD`; not the default
+- [ ] Postgres port not published to host (use `!reset []` override above)
+- [ ] TLS via reverse proxy; HSTS enabled
+- [ ] `RUST_LOG=info` not `debug` (avoid logging tokens / PII)
+- [ ] `cors.allowed_origins` set explicitly in `config/production.toml`
+- [ ] SMTP configured (else verification / reset emails only log to stdout)
+- [ ] Scheduled `pg_dump` backups + offsite copy
+- [ ] Container restart policy `unless-stopped` (already set)
+- [ ] Monitor `/health` from external uptime check
 
 ## Production Deployment (Docker)
 
@@ -282,7 +416,7 @@ See `.env.example` for all variables.
 ### Key Sections
 
 **[auth]**
-- `jwt_secret`: Secret for signing JWT tokens (set in production!)
+- `jwt_secret`: Secret for signing JWT tokens. **Required.** Set via `APP__AUTH__JWT_SECRET` env (no toml fallback).
 - `jwt_access_ttl_min`: Access token lifetime (default 30 min)
 - `jwt_refresh_ttl_days`: Refresh token lifetime (default 14 days)
 - `password_min_length`: Minimum password length (default 8)
@@ -296,10 +430,10 @@ See `.env.example` for all variables.
 - Set for production: `smtp_host`, `smtp_port`, `smtp_username`, `smtp_password`
 
 **[db]**
-- `url`: Postgres connection string
+- `url`: Postgres connection string. **Required.** Set via `DATABASE_URL` env (no toml fallback).
 - `max_connections`: Pool size (default 20)
 - `min_connections`: Min idle connections (default 2)
-- `run_migrations_on_start`: Auto-migrate on startup (default true)
+- `run_migrations_on_start`: Auto-migrate on startup (default true; production.toml sets false — docker compose overrides via env to true)
 
 ## Admin Setup
 

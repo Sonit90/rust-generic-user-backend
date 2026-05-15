@@ -8,15 +8,14 @@ public_url = "http://localhost:8080"
 request_timeout_secs = 30
 
 [db]
-# Prefer DATABASE_URL env var; this is a fallback for local runs.
-url = "postgres://auth_user:auth_password@localhost:5432/auth_db"
+# url MUST come from DATABASE_URL env var (or APP__DB__URL).
 max_connections = 20
 min_connections = 2
 acquire_timeout_secs = 10
 run_migrations_on_start = true
 
 [auth]
-jwt_secret = "change-me-in-production"
+# jwt_secret MUST come from APP__AUTH__JWT_SECRET env var.
 jwt_access_ttl_min = 30
 jwt_refresh_ttl_days = 14
 password_min_length = 8
