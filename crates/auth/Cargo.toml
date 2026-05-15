@@ -14,12 +14,7 @@ path = "src/lib.rs"
 [dependencies]
 generic-auth-core = { path = "../core" }
 generic-auth-db   = { path = "../db" }
-
-tokio = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true }
-thiserror = { workspace = true }
-tracing = { workspace = true }
 uuid = { workspace = true }
 time = { workspace = true }
 
@@ -32,4 +27,3 @@ hex = { workspace = true }
 reqwest = { workspace = true }
 url = { workspace = true }
 sqlx = { workspace = true }
-async-trait = { workspace = true }
