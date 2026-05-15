@@ -1,53 +1,22 @@
-name: price-merger
+name: generic-auth
 
 services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: price_merger
-      POSTGRES_PASSWORD: price_merger
-      POSTGRES_DB: price_merger
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_password
+      POSTGRES_DB: auth_db
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U price_merger"]
+      test: ["CMD-SHELL", "pg_isready -U auth_user"]
       interval: 5s
       timeout: 5s
       retries: 10
-
-  rustfs:
-    # RustFS — S3-compatible object storage written in Rust.
-    # Pin a tag in production. Endpoint defaults to :9000, console :9001.
-    image: rustfs/rustfs:latest
-    restart: unless-stopped
-    environment:
-      RUSTFS_ROOT_USER: price_merger
-      RUSTFS_ROOT_PASSWORD: price_merger_secret
-    command: ["server", "/data", "--console-address", ":9001"]
-    ports:
-      - "9100:9000"
-      - "9101:9001"
-    volumes:
-      - rustfs_data:/data
-
-  # One-shot job that creates the bucket on first boot.
-  # Retries until MinIO is accepting connections — no healthcheck needed.
-  rustfs-init:
-    image: minio/mc:latest
-    depends_on:
-      - rustfs
-    entrypoint: >
-      /bin/sh -c "
-      until mc alias set local http://rustfs:9000 price_merger price_merger_secret >/dev/null 2>&1; do
-        echo 'waiting for rustfs...'; sleep 2;
-      done &&
-      mc mb --ignore-existing local/price-merger &&
-      mc anonymous set download local/price-merger || true
-      "
-    restart: "no"
 
   api:
     build:
@@ -57,21 +26,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      rustfs:
-        condition: service_healthy
     environment:
       APP_ENV: production
-      RUST_LOG: info,price_merger=debug,sqlx=warn
-      DATABASE_URL: postgres://price_merger:price_merger@postgres:5432/price_merger
-      APP__STORAGE__ENDPOINT: http://rustfs:9000
-      APP__STORAGE__BUCKET: price-merger
-      APP__STORAGE__ACCESS_KEY: price_merger
-      APP__STORAGE__SECRET_KEY: price_merger_secret
-      APP__STORAGE__USE_PATH_STYLE: "true"
-      APP__AUTH__JWT_SECRET: ${APP__AUTH__JWT_SECRET:-change-me}
+      RUST_LOG: info,generic_auth=debug,sqlx=warn
+      DATABASE_URL: postgres://auth_user:auth_password@postgres:5432/auth_db
+      APP__AUTH__JWT_SECRET: ${APP__AUTH__JWT_SECRET:-change-me-in-production}
     ports:
       - "8080:8080"
 
 volumes:
   postgres_data:
-  rustfs_data:

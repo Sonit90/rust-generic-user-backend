@@ -1,7 +1,7 @@
 use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
 use utoipa::{Modify, OpenApi};
 
-use crate::routes::{admin, auth, files, formats, mappings, merge, users};
+use crate::routes::{admin, auth, users};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -22,24 +22,6 @@ use crate::routes::{admin, auth, files, formats, mappings, merge, users};
         admin::set_role,
         admin::set_active,
         admin::grant_permission,
-        files::upload,
-        files::list,
-        files::download,
-        files::delete_file,
-        files::preview,
-        mappings::create,
-        mappings::list,
-        mappings::get_one,
-        mappings::delete,
-        formats::create,
-        formats::list,
-        formats::get_one,
-        formats::delete,
-        formats::update,
-        merge::start_run,
-        merge::list_runs,
-        merge::get_run,
-        merge::download_run,
     ),
     components(schemas(
         auth::RegisterReq,
@@ -54,30 +36,12 @@ use crate::routes::{admin, auth, files, formats, mappings, merge, users};
         admin::SetRoleReq,
         admin::SetActiveReq,
         admin::GrantPermReq,
-        mappings::CreateMappingReq,
-        formats::CreateFormatReq,
-        formats::UpdateFormatReq,
-        merge::StartRunReq,
-        merge::InputSpec,
-        price_merger_core::models::User,
-        price_merger_core::models::Role,
-        price_merger_core::models::UploadedFile,
-        price_merger_core::models::FileKind,
-        price_merger_core::models::ColumnMapping,
-        price_merger_core::models::MappedColumn,
-        price_merger_core::models::DataType,
-        price_merger_core::models::CanonicalColumn,
-        price_merger_core::models::ColumnTransform,
-        price_merger_core::models::OutputFormat,
-        price_merger_core::models::OutputColumn,
-        price_merger_core::models::ExprTransform,
-        price_merger_core::models::MergeRun,
-        price_merger_core::models::MergeStatus,
-        files::FilePreviewResponse,
+        generic_auth_core::models::User,
+        generic_auth_core::models::Role,
     )),
     modifiers(&BearerAuth),
     info(
-        title = "Price Merger API",
+        title = "Generic Auth API",
         version = "0.1.0",
     ),
 )]

@@ -4,8 +4,8 @@ use axum::{
     extract::FromRequestParts,
     http::{header, request::Parts},
 };
-use price_merger_auth::JwtCodec;
-use price_merger_core::{models::{Role, User}, AppError};
+use generic_auth_auth::JwtCodec;
+use generic_auth_core::{models::{Role, User}, AppError};
 use uuid::Uuid;
 
 use crate::error::ApiError;

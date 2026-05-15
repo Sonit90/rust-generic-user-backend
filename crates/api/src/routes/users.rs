@@ -1,6 +1,6 @@
 use axum::{extract::State, routing::get, Json, Router};
-use price_merger_core::models::User;
-use price_merger_db::users as user_db;
+use generic_auth_core::models::User;
+use generic_auth_db::users as user_db;
 
 use crate::error::{ApiError, ApiResult};
 use crate::middleware::auth::AuthUser;
@@ -26,7 +26,7 @@ pub fn router() -> Router<AppState> {
 pub(crate) async fn me(State(state): State<AppState>, user: AuthUser) -> ApiResult<Json<User>> {
     let u = user_db::find_by_id(&state.db, user.user_id)
         .await.map_err(|e| ApiError(e.into()))?
-        .ok_or_else(|| ApiError(price_merger_core::AppError::NotFound))?;
+        .ok_or_else(|| ApiError(generic_auth_core::AppError::NotFound))?;
     Ok(Json(u))
 }
 

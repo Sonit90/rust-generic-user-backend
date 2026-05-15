@@ -8,11 +8,11 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use price_merger_auth::{
+use generic_auth_auth::{
     generate_refresh_token, hash_password, hash_refresh_token, verify_password,
 };
-use price_merger_core::{models::{Role, User}, AppError};
-use price_merger_db::users as user_db;
+use generic_auth_core::{models::{Role, User}, AppError};
+use generic_auth_db::users as user_db;
 use serde::{Deserialize, Serialize};
 use time::{Duration as TDuration, OffsetDateTime};
 use utoipa::ToSchema;
@@ -268,7 +268,7 @@ pub(crate) async fn logout(
     tag = "auth",
 )]
 pub(crate) async fn google_start(State(state): State<AppState>) -> ApiResult<impl IntoResponse> {
-    let cfg = price_merger_auth::oauth::GoogleConfig {
+    let cfg = generic_auth_auth::oauth::GoogleConfig {
         client_id: state.settings.auth.google.client_id.clone(),
         client_secret: state.settings.auth.google.client_secret.clone(),
         redirect_url: state.settings.auth.google.redirect_url.clone(),
@@ -276,8 +276,8 @@ pub(crate) async fn google_start(State(state): State<AppState>) -> ApiResult<imp
     if cfg.client_id.is_empty() {
         return Err(ApiError(AppError::BadRequest("google oauth disabled".into())));
     }
-    let client = price_merger_auth::oauth::google_client(&cfg).map_err(ApiError)?;
-    let (url, _csrf) = price_merger_auth::oauth::google_authorize_url(&client);
+    let client = generic_auth_auth::oauth::google_client(&cfg).map_err(ApiError)?;
+    let (url, _csrf) = generic_auth_auth::oauth::google_authorize_url(&client);
     // TODO: persist `_csrf` in a signed cookie and check on callback.
     Ok(Redirect::temporary(url.as_str()))
 }
@@ -300,13 +300,13 @@ pub(crate) async fn google_callback(
     State(state): State<AppState>,
     Query(q): Query<OAuthCallbackQuery>,
 ) -> ApiResult<Json<TokenPair>> {
-    let cfg = price_merger_auth::oauth::GoogleConfig {
+    let cfg = generic_auth_auth::oauth::GoogleConfig {
         client_id: state.settings.auth.google.client_id.clone(),
         client_secret: state.settings.auth.google.client_secret.clone(),
         redirect_url: state.settings.auth.google.redirect_url.clone(),
     };
-    let client = price_merger_auth::oauth::google_client(&cfg).map_err(ApiError)?;
-    let profile = price_merger_auth::oauth::google_exchange_code(&client, q.code, &state.http)
+    let client = generic_auth_auth::oauth::google_client(&cfg).map_err(ApiError)?;
+    let profile = generic_auth_auth::oauth::google_exchange_code(&client, q.code, &state.http)
         .await.map_err(ApiError)?;
 
     let user = upsert_oauth_user(&state, "google", &profile.sub,
@@ -488,7 +488,7 @@ pub(crate) async fn forgot_password(
     if let Ok(Some(token)) = request_password_reset(&state, &body.email, 1).await {
         let url = format!(
             "{}/reset-password?token={}",
-            state.settings.http.frontend_url, token
+            state.settings.http.public_url, token
         );
         let email = body.email.clone();
         tokio::spawn(async move {
@@ -537,7 +537,7 @@ async fn spawn_verification_email(state: AppState, user_id: Uuid, email: String)
 
     let url = format!(
         "{}/verify-email?token={}",
-        state.settings.http.frontend_url, token
+        state.settings.http.public_url, token
     );
 
     tokio::spawn(async move {
@@ -573,7 +573,7 @@ async fn upsert_oauth_user(
     email: Option<&str>,
     display: Option<&str>,
     raw: &serde_json::Value,
-) -> ApiResult<price_merger_core::models::User> {
+) -> ApiResult<generic_auth_core::models::User> {
     if let Some(u) = user_db::find_user_by_oauth(&state.db, provider, subject)
         .await.map_err(|e| ApiError(e.into()))?
     {

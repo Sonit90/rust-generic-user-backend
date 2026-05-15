@@ -2,7 +2,7 @@ use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString},
     Argon2, PasswordHash,
 };
-use price_merger_core::AppError;
+use generic_auth_core::AppError;
 
 /// Hash a password with Argon2id and a random per-password salt.
 pub fn hash_password(plain: &str) -> Result<String, AppError> {

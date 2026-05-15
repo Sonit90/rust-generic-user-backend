@@ -1,5 +1,5 @@
 [package]
-name = "price-merger-api"
+name = "generic-auth-api"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,15 +8,13 @@ authors.workspace = true
 publish = false
 
 [[bin]]
-name = "price-merger-api"
+name = "generic-auth-api"
 path = "src/main.rs"
 
 [dependencies]
-price-merger-core = { path = "../core" }
-price-merger-db   = { path = "../db" }
-price-merger-auth = { path = "../auth" }
-price-merger-file-processor = { path = "../file-processor" }
-price-merger-jobs = { path = "../jobs" }
+generic-auth-core = { path = "../core" }
+generic-auth-db   = { path = "../db" }
+generic-auth-auth = { path = "../auth" }
 
 # Web
 axum = { workspace = true }

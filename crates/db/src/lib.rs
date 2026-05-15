@@ -7,11 +7,6 @@
 use sqlx::postgres::{PgPoolOptions, PgPool};
 use std::time::Duration;
 
-pub mod files;
-pub mod formats;
-pub mod jobs;
-pub mod mappings;
-pub mod merge_runs;
 pub mod types;
 pub mod users;
 
@@ -57,11 +52,11 @@ pub async fn run_migrations(pool: &PgPool) -> DbResult<()> {
 }
 
 /// Convert DB errors into the workspace-wide `AppError`.
-impl From<DbError> for price_merger_core::AppError {
+impl From<DbError> for generic_auth_core::AppError {
     fn from(e: DbError) -> Self {
         match &e {
-            DbError::Sqlx(sqlx::Error::RowNotFound) => price_merger_core::AppError::NotFound,
-            _ => price_merger_core::AppError::Database(e.to_string()),
+            DbError::Sqlx(sqlx::Error::RowNotFound) => generic_auth_core::AppError::NotFound,
+            _ => generic_auth_core::AppError::Database(e.to_string()),
         }
     }
 }

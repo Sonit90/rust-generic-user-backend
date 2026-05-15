@@ -6,7 +6,7 @@
 //!  * Permission resolution is `role_permissions ∪ user_permissions(granted)`
 //!    minus `user_permissions(revoked)`.
 
-use price_merger_core::models::{Role, User};
+use generic_auth_core::models::{Role, User};
 use sqlx::PgPool;
 use time::OffsetDateTime;
 use uuid::Uuid;

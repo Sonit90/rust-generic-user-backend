@@ -1,9 +1,8 @@
 use std::sync::Arc;
 
-use price_merger_auth::JwtCodec;
-use price_merger_core::{models::User, AppError};
-use price_merger_db::{connect, run_migrations, users as user_db, DbConfig};
-use price_merger_jobs::{storage::StorageConfig, ObjectStore};
+use generic_auth_auth::JwtCodec;
+use generic_auth_core::{models::User, AppError};
+use generic_auth_db::{connect, run_migrations, users as user_db, DbConfig};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -14,7 +13,6 @@ use crate::middleware::auth::{FindUserById, HasJwt};
 pub struct AppState {
     pub settings: Arc<Settings>,
     pub db: PgPool,
-    pub storage: Arc<ObjectStore>,
     pub jwt: Arc<JwtCodec>,
     pub http: reqwest::Client,
 }
@@ -32,29 +30,19 @@ impl AppState {
             run_migrations(&db).await?;
         }
 
-        let storage = ObjectStore::new(StorageConfig {
-            endpoint: settings.storage.endpoint.clone(),
-            region: settings.storage.region.clone(),
-            bucket: settings.storage.bucket.clone(),
-            access_key: settings.storage.access_key.clone(),
-            secret_key: settings.storage.secret_key.clone(),
-            use_path_style: settings.storage.use_path_style,
-        }).await?;
-
-        let jwt = JwtCodec::new(price_merger_auth::JwtConfig {
+        let jwt = JwtCodec::new(generic_auth_auth::JwtConfig {
             secret: settings.auth.jwt_secret.clone(),
             access_ttl_min: settings.auth.jwt_access_ttl_min,
             refresh_ttl_days: settings.auth.jwt_refresh_ttl_days,
-            issuer: "price-merger".into(),
+            issuer: "generic-auth".into(),
         });
 
         Ok(Self {
             settings,
             db,
-            storage: Arc::new(storage),
             jwt: Arc::new(jwt),
             http: reqwest::Client::builder()
-                .user_agent("price-merger/0.1")
+                .user_agent("generic-auth/0.1")
                 .build()?,
         })
     }

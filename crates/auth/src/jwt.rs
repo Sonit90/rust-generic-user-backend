@@ -1,5 +1,5 @@
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
-use price_merger_core::{models::Role, AppError};
+use generic_auth_core::{models::Role, AppError};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use uuid::Uuid;
