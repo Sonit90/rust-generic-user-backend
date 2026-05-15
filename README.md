@@ -38,17 +38,14 @@ Zero external services needed except PostgreSQL.
 ### Setup (Local Dev)
 
 ```powershell
-# 1. Clone and copy env
+# 1. Clone and copy env (edit POSTGRES_*, DATABASE_URL, APP__AUTH__JWT_SECRET as needed)
 cp .env.example .env
-# Edit .env if needed (defaults assume localhost postgres)
 
-# 2. Start Postgres (if using Docker)
-cd docker
-docker compose up -d postgres
-cd ..
+# 2. Start Postgres (compose reads .env from repo root)
+docker compose -f docker/docker-compose.yml --env-file .env up -d postgres
 
-# 3. Run migrations
-$env:DATABASE_URL = "postgres://auth_user:auth_password@localhost:5434/auth_db"
+# 3. Run migrations (DATABASE_URL points at host port from .env)
+$env:DATABASE_URL = (Get-Content .env | Select-String "^DATABASE_URL=").ToString().Split("=",2)[1]
 sqlx migrate run
 
 # 4. Start the API
@@ -59,12 +56,13 @@ API listens on `http://localhost:8080`. Health check: `GET /health`.
 
 ### Setup (Docker)
 
+Run from repo root (compose reads `.env` here for `POSTGRES_*` + `APP__AUTH__JWT_SECRET`):
+
 ```powershell
-cd docker
-docker compose up -d
+docker compose -f docker/docker-compose.yml --env-file .env up -d
 ```
 
-This runs postgres + API in containers. Postgres: 5432, API: 8080.
+Postgres: `${POSTGRES_HOST_PORT}` on host → `${POSTGRES_PORT}` in container. API: 8080.
 
 ## Production Deployment (Docker)
 
@@ -88,45 +86,57 @@ openssl rand -hex 32
 
 Never commit these. Never reuse the defaults in `docker/docker-compose.yml`.
 
-### 3. Create production `.env` next to compose file
-
-`docker/.env`:
+### 3. Create production `.env` at repo root
 
 ```env
-APP__AUTH__JWT_SECRET=<paste 64-byte hex from step 2>
+POSTGRES_USER=auth_user
 POSTGRES_PASSWORD=<paste 32-byte hex from step 2>
+POSTGRES_DB=auth_db
+POSTGRES_PORT=5432
+POSTGRES_HOST_PORT=5434
+
+APP__AUTH__JWT_SECRET=<paste 64-byte hex from step 2>
+
+# Optional integrations
+APP__AUTH__GOOGLE__CLIENT_ID=
+APP__AUTH__GOOGLE__CLIENT_SECRET=
+APP__AUTH__GOOGLE__REDIRECT_URL=
+APP__EMAIL__SMTP_HOST=
+APP__EMAIL__SMTP_PORT=587
+APP__EMAIL__SMTP_USERNAME=
+APP__EMAIL__SMTP_PASSWORD=
 ```
 
-Compose reads it automatically. Add `docker/.env` to local secrets store; it is already excluded via `.dockerignore` / `.gitignore`.
+`.env` is git-ignored. Store securely (Vault, AWS Secrets Manager, etc.).
 
 ### 4. Override compose for production
 
-Create `docker/docker-compose.prod.yml`:
+Create `docker/docker-compose.prod.yml` (hides Postgres from host + passes optional env):
 
 ```yaml
 services:
   postgres:
-    environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports: !reset []           # do not expose Postgres on host
+    ports: !reset []
   api:
     environment:
-      DATABASE_URL: postgres://auth_user:${POSTGRES_PASSWORD}@postgres:5432/auth_db
       RUST_LOG: info,generic_auth=info,sqlx=warn
-      APP__AUTH__GOOGLE__CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      APP__AUTH__GOOGLE__CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      APP__AUTH__GOOGLE__REDIRECT_URL: ${GOOGLE_REDIRECT_URL:-}
-      APP__EMAIL__SMTP_HOST: ${SMTP_HOST:-}
-      APP__EMAIL__SMTP_PORT: ${SMTP_PORT:-587}
-      APP__EMAIL__SMTP_USERNAME: ${SMTP_USERNAME:-}
-      APP__EMAIL__SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      APP__AUTH__GOOGLE__CLIENT_ID: ${APP__AUTH__GOOGLE__CLIENT_ID}
+      APP__AUTH__GOOGLE__CLIENT_SECRET: ${APP__AUTH__GOOGLE__CLIENT_SECRET}
+      APP__AUTH__GOOGLE__REDIRECT_URL: ${APP__AUTH__GOOGLE__REDIRECT_URL}
+      APP__EMAIL__SMTP_HOST: ${APP__EMAIL__SMTP_HOST}
+      APP__EMAIL__SMTP_PORT: ${APP__EMAIL__SMTP_PORT}
+      APP__EMAIL__SMTP_USERNAME: ${APP__EMAIL__SMTP_USERNAME}
+      APP__EMAIL__SMTP_PASSWORD: ${APP__EMAIL__SMTP_PASSWORD}
 ```
 
-### 5. Build + start
+### 5. Build + start (from repo root)
 
 ```bash
-cd docker
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker compose \
+  -f docker/docker-compose.yml \
+  -f docker/docker-compose.prod.yml \
+  --env-file .env \
+  up -d --build
 ```
 
 API starts → connects to Postgres → applies migrations → listens on `:8080`.
@@ -162,7 +172,11 @@ auth.example.com {
 
 ```bash
 git pull
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker compose \
+  -f docker/docker-compose.yml \
+  -f docker/docker-compose.prod.yml \
+  --env-file .env \
+  up -d --build
 ```
 
 Old container stops, new one starts, migrations apply automatically. Downtime: ~2-5s.
@@ -282,7 +296,7 @@ See `.env.example` for all variables.
 ### Key Sections
 
 **[auth]**
-- `jwt_secret`: Secret for signing JWT tokens (set in production!)
+- `jwt_secret`: Secret for signing JWT tokens. **Required.** Set via `APP__AUTH__JWT_SECRET` env (no toml fallback).
 - `jwt_access_ttl_min`: Access token lifetime (default 30 min)
 - `jwt_refresh_ttl_days`: Refresh token lifetime (default 14 days)
 - `password_min_length`: Minimum password length (default 8)
@@ -296,10 +310,10 @@ See `.env.example` for all variables.
 - Set for production: `smtp_host`, `smtp_port`, `smtp_username`, `smtp_password`
 
 **[db]**
-- `url`: Postgres connection string
+- `url`: Postgres connection string. **Required.** Set via `DATABASE_URL` env (no toml fallback).
 - `max_connections`: Pool size (default 20)
 - `min_connections`: Min idle connections (default 2)
-- `run_migrations_on_start`: Auto-migrate on startup (default true)
+- `run_migrations_on_start`: Auto-migrate on startup (default true; production.toml sets false — docker compose overrides via env to true)
 
 ## Admin Setup
 
