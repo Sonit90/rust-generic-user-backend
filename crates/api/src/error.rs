@@ -47,3 +47,21 @@ impl IntoResponse for ApiError {
 }
 
 pub type ApiResult<T> = Result<T, ApiError>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn conflict_maps_to_409_not_500() {
+        let resp = ApiError::from(AppError::Conflict("email already exists".into()))
+            .into_response();
+        assert_eq!(resp.status(), StatusCode::CONFLICT);
+    }
+
+    #[test]
+    fn database_maps_to_500() {
+        let resp = ApiError::from(AppError::Database("boom".into())).into_response();
+        assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    }
+}

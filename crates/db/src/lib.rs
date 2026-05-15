@@ -52,11 +52,26 @@ pub async fn run_migrations(pool: &PgPool) -> DbResult<()> {
 }
 
 /// Convert DB errors into the workspace-wide `AppError`.
+///
+/// Postgres SQLSTATE `23505` (unique_violation) is surfaced as
+/// `AppError::Conflict` so callers (e.g. `POST /auth/register`) return
+/// HTTP 409 instead of leaking a 500 on duplicate inputs.
 impl From<DbError> for generic_auth_core::AppError {
     fn from(e: DbError) -> Self {
         match &e {
             DbError::Sqlx(sqlx::Error::RowNotFound) => generic_auth_core::AppError::NotFound,
+            DbError::Sqlx(sqlx::Error::Database(db)) if db.code().as_deref() == Some("23505") => {
+                generic_auth_core::AppError::Conflict(unique_violation_message(db.constraint()))
+            }
             _ => generic_auth_core::AppError::Database(e.to_string()),
         }
+    }
+}
+
+fn unique_violation_message(constraint: Option<&str>) -> String {
+    match constraint {
+        Some("users_email_key") => "email already exists".into(),
+        Some(c) => format!("already exists ({c})"),
+        None => "already exists".into(),
     }
 }
