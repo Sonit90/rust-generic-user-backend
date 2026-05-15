@@ -10,6 +10,7 @@ COPY Cargo.toml Cargo.lock* ./
 COPY crates ./crates
 COPY migrations ./migrations
 COPY config ./config
+COPY .sqlx ./.sqlx
 
 # Build with offline mode if .sqlx exists, otherwise connect to DB at build time.
 # For offline builds: run `cargo sqlx prepare --workspace` to generate .sqlx/

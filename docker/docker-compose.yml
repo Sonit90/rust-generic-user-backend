@@ -31,6 +31,7 @@ services:
       RUST_LOG: info,generic_auth=debug,sqlx=warn
       DATABASE_URL: postgres://auth_user:auth_password@postgres:5432/auth_db
       APP__AUTH__JWT_SECRET: ${APP__AUTH__JWT_SECRET:-change-me-in-production}
+      APP__DB__RUN_MIGRATIONS_ON_START: "true"
     ports:
       - "8080:8080"
 

@@ -66,6 +66,134 @@ docker compose up -d
 
 This runs postgres + API in containers. Postgres: 5432, API: 8080.
 
+## Production Deployment (Docker)
+
+Docker Compose is the supported deployment path. App auto-runs migrations on container start (compose sets `APP__DB__RUN_MIGRATIONS_ON_START=true`).
+
+### 1. Prerequisites
+
+- Docker Engine 24+ with Compose v2 plugin
+- Outbound network access for `cargo` + Docker Hub during initial build
+- Committed `.sqlx/` offline query cache (run `cargo sqlx prepare --workspace` locally against a dev DB and commit before first deploy)
+
+### 2. Generate secrets
+
+```bash
+# JWT signing secret (64-byte hex)
+openssl rand -hex 64
+
+# Postgres password
+openssl rand -hex 32
+```
+
+Never commit these. Never reuse the defaults in `docker/docker-compose.yml`.
+
+### 3. Create production `.env` next to compose file
+
+`docker/.env`:
+
+```env
+APP__AUTH__JWT_SECRET=<paste 64-byte hex from step 2>
+POSTGRES_PASSWORD=<paste 32-byte hex from step 2>
+```
+
+Compose reads it automatically. Add `docker/.env` to local secrets store; it is already excluded via `.dockerignore` / `.gitignore`.
+
+### 4. Override compose for production
+
+Create `docker/docker-compose.prod.yml`:
+
+```yaml
+services:
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports: !reset []           # do not expose Postgres on host
+  api:
+    environment:
+      DATABASE_URL: postgres://auth_user:${POSTGRES_PASSWORD}@postgres:5432/auth_db
+      RUST_LOG: info,generic_auth=info,sqlx=warn
+      APP__AUTH__GOOGLE__CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      APP__AUTH__GOOGLE__CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      APP__AUTH__GOOGLE__REDIRECT_URL: ${GOOGLE_REDIRECT_URL:-}
+      APP__EMAIL__SMTP_HOST: ${SMTP_HOST:-}
+      APP__EMAIL__SMTP_PORT: ${SMTP_PORT:-587}
+      APP__EMAIL__SMTP_USERNAME: ${SMTP_USERNAME:-}
+      APP__EMAIL__SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+```
+
+### 5. Build + start
+
+```bash
+cd docker
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+API starts → connects to Postgres → applies migrations → listens on `:8080`.
+
+### 6. Create first admin user
+
+```bash
+docker compose exec api /usr/local/bin/generic-auth-api \
+  create-admin --email=admin@example.com --password='<strong-password>'
+```
+
+### 7. Verify
+
+```bash
+curl -fsS http://<host>:8080/health
+docker compose ps
+docker compose logs -f api
+```
+
+### 8. Reverse proxy + TLS
+
+Run nginx / Caddy / Traefik in front of port `8080`. Terminate TLS there. Do not expose `8080` to the public internet directly.
+
+Caddy example:
+
+```caddyfile
+auth.example.com {
+    reverse_proxy localhost:8080
+}
+```
+
+### 9. Updates
+
+```bash
+git pull
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+Old container stops, new one starts, migrations apply automatically. Downtime: ~2-5s.
+
+### 10. Backups
+
+Postgres data lives in the `generic-auth_postgres_data` named volume. Snapshot via:
+
+```bash
+docker compose exec postgres pg_dump -U auth_user auth_db > backup-$(date +%F).sql
+```
+
+Restore:
+
+```bash
+cat backup-2026-05-15.sql | docker compose exec -T postgres psql -U auth_user auth_db
+```
+
+### Production hardening checklist
+
+- [ ] Strong `APP__AUTH__JWT_SECRET` (≥64 bytes random); rotate on suspected compromise
+- [ ] Strong `POSTGRES_PASSWORD`; not the default
+- [ ] Postgres port not published to host (use `!reset []` override above)
+- [ ] TLS via reverse proxy; HSTS enabled
+- [ ] `RUST_LOG=info` not `debug` (avoid logging tokens / PII)
+- [ ] `cors.allowed_origins` set explicitly in `config/production.toml`
+- [ ] SMTP configured (else verification / reset emails only log to stdout)
+- [ ] Scheduled `pg_dump` backups + offsite copy
+- [ ] Container restart policy `unless-stopped` (already set)
+- [ ] Monitor `/health` from external uptime check
+
 ## API Endpoints
 
 All auth endpoints return `(access_token, refresh_token)` on success.
