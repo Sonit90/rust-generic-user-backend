@@ -42,7 +42,7 @@ Zero external services needed except PostgreSQL.
 cp .env.example .env
 
 # 2. Start Postgres (compose reads .env from repo root)
-docker compose -f docker/docker-compose.yml --env-file .env up -d postgres
+docker compose up -d postgres
 
 # 3. Run migrations (DATABASE_URL points at host port from .env)
 $env:DATABASE_URL = (Get-Content .env | Select-String "^DATABASE_URL=").ToString().Split("=",2)[1]
@@ -56,10 +56,10 @@ API listens on `http://localhost:8080`. Health check: `GET /health`.
 
 ### Setup (Docker)
 
-Run from repo root (compose reads `.env` here for `POSTGRES_*` + `APP__AUTH__JWT_SECRET`):
+Run from repo root (compose auto-reads `.env` adjacent to `docker-compose.yml`):
 
 ```powershell
-docker compose -f docker/docker-compose.yml --env-file .env up -d
+docker compose up -d
 ```
 
 Postgres: `${POSTGRES_HOST_PORT}` on host → `${POSTGRES_PORT}` in container. API: 8080.
@@ -84,7 +84,7 @@ openssl rand -hex 64
 openssl rand -hex 32
 ```
 
-Never commit these. Never reuse the defaults in `docker/docker-compose.yml`.
+Never commit these. Never reuse the defaults in `docker-compose.yml`.
 
 ### 3. Create production `.env` at repo root
 
@@ -111,7 +111,7 @@ APP__EMAIL__SMTP_PASSWORD=
 
 ### 4. Override compose for production
 
-Create `docker/docker-compose.prod.yml` (hides Postgres from host + passes optional env):
+Create `docker-compose.prod.yml` at repo root (hides Postgres from host + passes optional env):
 
 ```yaml
 services:
@@ -132,11 +132,7 @@ services:
 ### 5. Build + start (from repo root)
 
 ```bash
-docker compose \
-  -f docker/docker-compose.yml \
-  -f docker/docker-compose.prod.yml \
-  --env-file .env \
-  up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 
 API starts → connects to Postgres → applies migrations → listens on `:8080`.
@@ -172,11 +168,7 @@ auth.example.com {
 
 ```bash
 git pull
-docker compose \
-  -f docker/docker-compose.yml \
-  -f docker/docker-compose.prod.yml \
-  --env-file .env \
-  up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 
 Old container stops, new one starts, migrations apply automatically. Downtime: ~2-5s.
