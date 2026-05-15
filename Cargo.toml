@@ -18,13 +18,10 @@ publish = false
 [workspace.dependencies]
 # Async runtime / utilities
 tokio = { version = "1.39", features = ["full"] }
-tokio-util = { version = "0.7", features = ["io"] }
-futures = "0.3"
 async-trait = "0.1"
 
 # Web stack (Axum)
 axum = { version = "0.8.9", features = ["macros", "multipart"] }
-axum-extra = { version = "0.12", features = ["cookie", "typed-header"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["trace", "cors", "limit", "compression-gzip", "request-id"] }
 hyper = { version = "1", features = ["full"] }
@@ -32,7 +29,6 @@ hyper = { version = "1", features = ["full"] }
 # Serialization / config
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-toml = "0.8"
 config = { version = "0.14", default-features = false, features = ["toml"] }
 
 # Errors / logging
@@ -64,11 +60,6 @@ rand = "0.8"
 
 # HTTP client (OAuth flows)
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
-
-# Misc
-bytes = "1"
-mime = "0.3"
-mime_guess = "2"
 sha2 = "0.10"
 hex = "0.4"
 lettre = { version = "0.11", default-features = false, features = ["tokio1-native-tls", "smtp-transport", "builder"] }

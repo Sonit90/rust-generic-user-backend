@@ -15,10 +15,7 @@ path = "src/lib.rs"
 generic-auth-core = { path = "../core" }
 
 sqlx = { workspace = true }
-serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
-tracing = { workspace = true }
 uuid = { workspace = true }
 time = { workspace = true }
-async-trait = { workspace = true }
